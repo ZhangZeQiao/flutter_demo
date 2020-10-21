@@ -1,6 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class FutureTestPage extends StatefulWidget {
@@ -23,7 +26,7 @@ class _FutureTestPageState extends State<FutureTestPage> {
       ),
       body: RaisedButton(
         child: Text('测试'),
-        onPressed: _asyncAndAwait,
+        onPressed: _isolateTest,
       ),
     );
   }
@@ -40,6 +43,45 @@ class _FutureTestPageState extends State<FutureTestPage> {
 
   // -------------------------------------------------------
   // -------------------------------------------------------
+
+  void _demo() {
+    print("initState:${DateTime.now()}");
+    _loadUserInfo();
+    print("initState:${DateTime.now()}");
+  }
+
+  Future _getUserInfo() async {
+    await Future.delayed(Duration(seconds: 3));
+    return '我是用户';
+  }
+
+  Future _loadUserInfo() async {
+    /*
+    I/flutter ( 5255): initState:2020-10-20 09:39:55.798376
+    I/flutter ( 5255): _loadUserInfo:2020-10-20 09:39:55.804968
+    I/flutter ( 5255): initState:2020-10-20 09:39:55.809743
+    I/flutter ( 5255): 我是用户
+    I/flutter ( 5255): _loadUserInfo:2020-10-20 09:39:58.814776
+    */
+    /*print('_loadUserInfo:${new DateTime.now()}');
+    // TODO await 会阻塞流程，等待紧跟着的的 Future 执行完毕之后，再执行下一条语句
+    print(await _getUserInfo());
+    print('_loadUserInfo:${new DateTime.now()}');*/
+
+    /*
+    I/flutter ( 5255): initState:2020-10-20 09:38:39.822147
+    I/flutter ( 5255): _loadUserInfo:2020-10-20 09:38:39.830940
+    I/flutter ( 5255): _loadUserInfo:2020-10-20 09:38:39.837982
+    I/flutter ( 5255): initState:2020-10-20 09:38:39.838884
+    I/flutter ( 5255): 我是用户
+    */
+    print('_loadUserInfo:${DateTime.now()}');
+    // TODO Future.then 这个 api，那么就不会等待，直接执行下面的语句，等 Future 执行完了，再调用 then 这个方法
+    _getUserInfo().then((info) {
+      print(info);
+    });
+    print('_loadUserInfo:${DateTime.now()}');
+  }
 
   // -------------------------------------------------------
   // -------------------------------------------------------
@@ -125,6 +167,7 @@ class _FutureTestPageState extends State<FutureTestPage> {
   所以能不能更给力一点呢？可以的！JavaScript有 async/await，Dart也有。
   async和await是什么？它们是Dart语言的关键字，有了这两个关键字，可以让你用同步代码的形式写出异步代码。
   */
+  // TODO async、await本质上就是协程的一种语法糖
   void _asyncAndAwait() {
     bar() async {
       print("bar E");
@@ -168,42 +211,92 @@ class _FutureTestPageState extends State<FutureTestPage> {
   // -------------------------------------------------------
   // -------------------------------------------------------
 
-  void _demo() {
-    print("initState:${DateTime.now()}");
-    _loadUserInfo();
-    print("initState:${DateTime.now()}");
-  }
+  /*
+  TODO https://www.jianshu.com/p/54da18ed1a9e
+   Flutter默认是单线程任务处理的，如果不开启新的线程，任务默认在主线程中处理。
+   应用程序启动后，开始执行main函数并运行main isolate。
+   每个isolate包含一个事件循环（event loop事件循环）以及两个事件队列（event queue和microtask queue事件队列）。
+   event queue：负责处理I/O事件、绘制事件、手势事件、接收其他isolate消息等外部事件。
+   microtask queue：可以自己向isolate内部添加事件，事件的优先级比event queue高。
 
-  Future _getUserInfo() async {
-    await Future.delayed(Duration(seconds: 3));
-    return '我是用户';
-  }
+  TODO
+   和普通Thread不同的是，isolate拥有独立的内存，isolate由线程和独立内存构成。
+   正是由于isolate线程之间的内存不共享，所以isolate线程之间并不存在资源抢夺的问题，所以也不需要锁。
 
-  Future _loadUserInfo() async {
-    /*
-    I/flutter ( 5255): initState:2020-10-20 09:39:55.798376
-    I/flutter ( 5255): _loadUserInfo:2020-10-20 09:39:55.804968
-    I/flutter ( 5255): initState:2020-10-20 09:39:55.809743
-    I/flutter ( 5255): 我是用户
-    I/flutter ( 5255): _loadUserInfo:2020-10-20 09:39:58.814776
-    */
-    /*print('_loadUserInfo:${new DateTime.now()}');
-    // TODO await 会阻塞流程，等待紧跟着的的 Future 执行完毕之后，再执行下一条语句
-    print(await _getUserInfo());
-    print('_loadUserInfo:${new DateTime.now()}');*/
-
-    /*
-    I/flutter ( 5255): initState:2020-10-20 09:38:39.822147
-    I/flutter ( 5255): _loadUserInfo:2020-10-20 09:38:39.830940
-    I/flutter ( 5255): _loadUserInfo:2020-10-20 09:38:39.837982
-    I/flutter ( 5255): initState:2020-10-20 09:38:39.838884
-    I/flutter ( 5255): 我是用户
-    */
-    print('_loadUserInfo:${DateTime.now()}');
-    // TODO Future.then 这个 api，那么就不会等待，直接执行下面的语句，等 Future 执行完了，再调用 then 这个方法
-    _getUserInfo().then((info) {
-      print(info);
+  TODO
+   Isolate 之间不共享任何资源，只能依靠消息机制通信，因此也就没有资源抢占问题。
+   但是，如果只有一个Isolate，那么意味着我们只能永远利用一个线程，这对于多核CPU来说，是一种资源的浪费。
+   通过isolate可以很好的利用多核CPU，来进行大量耗时任务的处理。
+   如果在开发中，我们有非常多耗时的计算，完全可以自己创建Isolate，在独立的Isolate中完成想要的计算操作。
+  */
+  void _sleepTest() {
+    Future(() {
+      print('111-----------');
     });
-    print('_loadUserInfo:${DateTime.now()}');
+    Future(() {
+      print('222-----------');
+      sleep(Duration(seconds: 10));
+    });
+    Future(() {
+      print('333-----------');
+    });
+    Future(() {
+      print('444-----------');
+    });
+    Future(() {
+      print('555-----------');
+    });
+  }
+
+  /*
+  TODO
+   事件会入列，如果某一个事件特别耗时，会影响后续事件的执行
+   所以，耗时的操作或者计算，可以另开线程来执行
+  */
+  /*
+  TODO https://blog.csdn.net/email_jade/article/details/88941434
+   dart中的Isolate比较重量级，UI线程和Isolate中的数据的传输比较复杂，因此flutter为了简化用户代码，在foundation库中封装了一个轻量级compute操作
+  */
+  void _isolateTest() {
+    Future(() {
+      print('111-----------+++');
+    });
+    Future(() {
+      print('222-----------+++');
+      _getHttp(1);
+      /*_getHttp(2);
+      _getHttp(3);
+      _getHttp(4);
+      _getHttp(5);
+      _getHttp(6);*/
+      // sleep(Duration(seconds: 3));
+      print('222++++++++++++++');
+    });
+    Future(() {
+      print('333-----------+++');
+    });
+    Future(() {
+      print('444-----------+++');
+    });
+    Future(() {
+      print('555-----------+++');
+    });
+  }
+
+  void _getHttp(count) async {
+    try {
+      // Response response = await Dio().get("https://www.baidu.com");
+      // print('+++' + response.toString() + '---$count');
+      await Dio().download(
+        "https://raw.githubusercontent.com/xuelongqy/flutter_easyrefresh/master/art/pkg/EasyRefresh.apk",
+        "/storage/emulated/0/AAAAAA.apk",
+        onReceiveProgress: (receivedBytes, totalBytes) {
+          print('进度---${receivedBytes / totalBytes}');
+        },
+      );
+      print('+++download+++success');
+    } catch (e) {
+      print(e);
+    }
   }
 }
