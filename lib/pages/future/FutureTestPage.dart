@@ -274,6 +274,9 @@ class _FutureTestPageState extends State<FutureTestPage> {
     });
     Future(() {
       print('333-----------+++');
+      Future.delayed(Duration(seconds: 1), () => print('333-----------1'));
+      Future.delayed(Duration(seconds: 1), () => print('333-----------2'));
+      Future.delayed(Duration(seconds: 1), () => print('333-----------3'));
     });
     Future(() {
       print('444-----------+++');
@@ -281,6 +284,24 @@ class _FutureTestPageState extends State<FutureTestPage> {
     Future(() {
       print('555-----------+++');
     });
+
+    /*
+    I/flutter ( 9656): 111-----------+++
+    I/flutter ( 9656): 222-----------+++
+    I/flutter ( 9656): 222++++++++++++++
+    I/flutter ( 9656): 333-----------+++
+    I/flutter ( 9656): 444-----------+++
+    I/flutter ( 9656): 555-----------+++
+    W/1.ui    ( 9656): type=1400 audit(0.0:2716): avc: granted { read } for name="AAAAAA.mp3" dev="sdcardfs" ino=163668 scontext=u:r:untrusted_app:s0:c119,c259,c512,c768 tcontext=u:object_r:sdcardfs:s0 tclass=file
+    W/1.ui    ( 9656): type=1400 audit(0.0:2718): avc: granted { read write } for name="AAAAAA.mp3" dev="sdcardfs" ino=163668 scontext=u:r:untrusted_app:s0:c119,c259,c512,c768 tcontext=u:object_r:sdcardfs:s0 tclass=file
+    I/flutter ( 9656): 进度---0.00008000369794870519
+    I/flutter ( 9656): 进度---0.0003911291899714476
+    I/flutter ( 9656): 333-----------1
+    I/flutter ( 9656): 333-----------2
+    I/flutter ( 9656): 333-----------3
+    I/flutter ( 9656): 进度---0.00070225468199419
+    I/flutter ( 9656): 进度---0.0010133801740169323
+    */
   }
 
   void _getHttp(count) async {
@@ -288,10 +309,14 @@ class _FutureTestPageState extends State<FutureTestPage> {
       // Response response = await Dio().get("https://www.baidu.com");
       // print('+++' + response.toString() + '---$count');
       await Dio().download(
-        "https://raw.githubusercontent.com/xuelongqy/flutter_easyrefresh/master/art/pkg/EasyRefresh.apk",
-        "/storage/emulated/0/AAAAAA.apk",
+        "http://music.163.com/song/media/outer/url?id=281951.mp3",
+        "/storage/emulated/0/AAAAAA.mp3",
         onReceiveProgress: (receivedBytes, totalBytes) {
-          print('进度---${receivedBytes / totalBytes}');
+          // print('进度---${receivedBytes / totalBytes}');
+          if ((receivedBytes / totalBytes) < 0.1) {
+            print('进度---${receivedBytes / totalBytes}');
+          }
+          // print('进度---${receivedBytes / totalBytes}');
         },
       );
       print('+++download+++success');
