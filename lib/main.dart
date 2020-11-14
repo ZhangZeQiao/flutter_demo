@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_demo/global/RouterManager.dart';
+import 'package:flutter_demo/global/router_util.dart';
 
 void main() {
   runApp(MyApp());
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: MyHomePage(title: 'Flutter 测试用例（Android Kotlin）'),
-      routes: RouterManager.routes,
+      routes: pageRoutes,
     );
   }
 }
@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text(_pageNames[index] ?? 'Name 为空'),
               onPressed: () {
                 Navigator.of(context)
-                    .pushNamed(_pageRoutes[index] ?? RouterManager.ROUTE_HOME);
+                    .pushNamed(_pageRoutes[index] ?? ROUTE_HOME);
               },
             ),
           );
@@ -68,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _initPageData() {
-    _pageRoutes.add(RouterManager.ROUTE_FUTURE_TEST);
+    _pageRoutes.add(ROUTE_FUTURE_TEST);
     _pageNames.add('Future 测试页');
   }
 }
