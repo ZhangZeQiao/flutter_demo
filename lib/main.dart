@@ -30,13 +30,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<String> _pageRoutes = [];
-  List<String> _pageNames = [];
+  List<String> _pageRoutes = [
+    ROUTE_FUTURE_TEST,
+    ROUTE_WIDGET_TEST,
+  ];
+  List<String> _pageNames = [
+    'Future 测试页',
+    'UI weight 测试页',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _initPageData();
   }
 
   @override
@@ -65,10 +70,5 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ),
     );
-  }
-
-  void _initPageData() {
-    _pageRoutes.add(ROUTE_FUTURE_TEST);
-    _pageNames.add('Future 测试页');
   }
 }
